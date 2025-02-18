@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{46270325-64ca-4c9b-a3ef-61f2ccfcd512}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cpp">
+      <UniqueIdentifier>{398fa06b-39ce-470c-95f3-f3593e71d745}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="LinklistOutput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Linkedlist.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="LinklistOutput.cpp">
+      <Filter>cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="Linkedlist.cpp">
+      <Filter>cpp</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

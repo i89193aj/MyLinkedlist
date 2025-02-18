@@ -1,0 +1,160 @@
+dll建置問題：
+解決問題：
+C#沒辦法知道C++的Native Code，所以以下介紹兩種方式：
+法一、
+用Clr專案開發：
+Clr是.Net環境下開發，他能讓C#跟C++知道彼此的語言
+缺點：
+萬一本身開發環境不是用Clr專案寫的，那會很麻煩，他需要將原本的C++的程式重新自行編譯一次在Clr開發環境
+
+法二、
+原本開發環境不是用Clr，但要給c#做可用的話：
+/***********************************************
+Step1.這裡最重要，把建立全新專案(dll)，然後把主控應用程式編輯好的.h跟.cpp丟進去，專案的資料夾裡!
+Step2.在pch.h打上所有的.h檔，然後每個.cpp都打上#include"pch.h"
+Step3.把Release 64改好(要跟開發的專案(引用dll的專案一樣))，然後丟進需要引用dll的專案的x64/Release/資料夾裡!
+Step4.
+c++：記得用extern "C"，否則c#不認識Func.
+#define BUILDING_DLL
+#ifdef BUILDING_DLL
+#define DLL_API __declspec(dllexport)
+#else
+#define DLL_API __declspec(dllimport)
+#endif
+extern "C" {
+    DLL_API void* CreateLinkedListInt();
+}
+C#：記得用[DllImport，否則進不來!
+// 設定 DLL 檔名，確保 DLL 和 C# 程式在同一個資料夾內
+private const string DLL_NAME = "Dll2.dll";
+
+// 使用 DllImport 宣告 C++ 函數
+[DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
+***********************************************/
+先把打好的(在別的環境開發好的.h跟.cpp)丟進，新建的dll環境：
+(不然先建的pch.h檔會不認識這個cpp跟h檔，這個cpp跟h檔也不認識新建的pch.h檔)
+1.extern "C"{ }：
+因為c#跟C++都認識C語言，所以用這個方式把需要的func包出去dll
+ex：
+在.h檔：(接口)
+extern "C" {
+    DLL_API void* CreateLinkedListInt();
+    DLL_API void* CreateLinkedListString();
+    DLL_API void AppendInt(void* list, int value);
+    DLL_API void AppendString(void* list, const char* value);
+    DLL_API int GetIntAt(void* list, int index);
+    DLL_API const char* GetStringAt(void* list, int index);
+    DLL_API void DeleteLinkedList(void* list);
+}
+
+這裡的DLL_API 是自己定義的宏，他代表：__declspec(dllexport)
+
+在.cpp檔：(實現))
+void* CreateLinkedListInt() {
+    return new MyLinkedlist<int>();  // 返回新建的 MyLinkedlist<int> 對象
+}
+
+void* CreateLinkedListString() {
+    return new MyLinkedlist<std::string>();  // 返回新建的 MyLinkedlist<std::string> 對象
+}
+
+// 插入整數
+void AppendInt(void* list, int value) {
+    static_cast<MyLinkedlist<int>*>(list)->Append(value);
+}
+
+// 插入字串
+void AppendString(void* list, const char* value) {
+    static_cast<MyLinkedlist<std::string>*>(list)->Append(std::string(value));
+}
+
+// 取得指定索引的整數
+int GetIntAt(void* list, int index) {
+    return static_cast<MyLinkedlist<int>*>(list)->GetValueAt(index);
+}
+
+// 取得指定索引的字串
+const char* GetStringAt(void* list, int index) {
+    std::string result = static_cast<MyLinkedlist<std::string>*>(list)->GetValueAt(index);
+    return result.c_str();
+}
+
+// 釋放鏈表記憶體
+void DeleteLinkedList(void* list) {
+    delete static_cast<MyLinkedlist<int>*>(list);
+}
+
+2.如果C++那邊是用模板(T)的話，請在最後用"extern"輸出模板能使用的type：
+.h檔：
+template<typename T>
+class DLL_API Node {
+public:
+    T val;
+    Node<T>* next;
+
+    Node(T val) : val(val), next(nullptr) {}
+};
+
+// MyLinkedlist 類定義
+template <typename T>
+class DLL_API MyLinkedlist {
+private:
+    Node<T>* Header;
+
+    enum MyType {
+        arithmetic,
+        MyString,
+        Other,
+    };
+
+public:
+    MyLinkedlist();
+    MyLinkedlist(const MyLinkedlist& _MyLinkedlist);
+    void Append(T _val);
+    void pop();
+    void DelectNode(T _val, bool IsAll = true);
+    void Insert(int _location, T _val);
+    void RemoveAt(int _location);
+    T GetValueAt(int position);
+    std::string printfIntAll();
+    std::string printstringAll();
+
+    ~MyLinkedlist();
+};
+
+// 顯示實例化模板，以便在 DLL 中生成特定類型(這裡就是輸出可以用的type)
+extern template class DLL_API MyLinkedlist<int>;
+extern template class DLL_API MyLinkedlist<std::string>;
+.cpp檔：
+// 顯式實例化模板以便在 DLL 中包含特定類型
+template class DLL_API MyLinkedlist<int>;
+template class DLL_API MyLinkedlist<std::string>;
+
+(如果有要為特別的tpye做實驗的話，.h那邊要額外宣告func，cpp這邊做實現)
+
+3.關於.pch：
+參考：https://duckroom.blogspot.com/2010/02/precompiled-header.html
+他是關於編譯時，如何加速：
+1.需要在每個實驗的cpp檔打#include "pch.h";
+2.需要在pch.h裡面打所有的.h：
+// 請於此新增您要先行編譯的標頭
+#include "framework.h"
+#include "Linkedlist.h"
+#include "LinklistOutput.h"
+
+4.在c++那邊使用：
+[DllImport("MyCppDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+public static extern int AddNumbers(int a, int b);
+就可以使用輸出的dll裡面的AddNumbers
+
+如果要在C#改名的話，範例如下：
+// 將 C++ 函數名 'AddNumbers' 在 C# 中改名為 'SumNumbers'
+    [DllImport("MyCppDLL.dll", EntryPoint = "AddNumbers", CallingConvention = CallingConvention.Cdecl)]
+    public static extern int SumNumbers(int a, int b);
+
+EntryPoint ：是進入點(也就是dll裡面的func)
+SumNumbers：是改名後的func(也就是C#改名後都可以用她來當作dll裡面的AddNumbers)
+
+
+
+
