@@ -18,7 +18,8 @@ public:
     T val;
     Node<T>* next;
 
-    Node(T val) : val(val), next(nullptr) {}
+    Node(T val) : val(val), next(nullptr) {};
+    Node(T val, Node<T>* next) :val(val), next(next) {};
 };
 
 // MyLinkedlist 類定義
@@ -44,13 +45,46 @@ public:
     T GetCopyValueAt(int position);
     const T& GetValueAt(int position);
     void* GetNextNode();
-
     std::string printfIntAll();
     std::string printstringAll();
 
     ~MyLinkedlist();
+
+    // ======= Leetcode Solutions =======
+    Node<T>* Leetcode_Sol_21(Node<T>* list1, Node<T>* list2, int _Soluttion_idx);
+    Node<T>* Leetcode_Sol_19(Node<T>* head, int n, int _Soluttion_idx);
+    bool Leetcode_Sol_141(Node<T>* head);
+    Node<T>* Leetcode_Sol_876(Node<T>* head, int _solution);
+    Node<T>* Leetcode_Sol_160(Node<T>* headA, Node<T>* headB, int _solution);
+    // ======= Leetcode Solutions =======
 };
 
 // 顯示實例化模板，以便在 DLL 中生成特定類型
 extern template class DLL_API MyLinkedlist<int>;
 extern template class DLL_API MyLinkedlist<std::string>;
+
+#pragma region OOP
+/*
+class Base {
+public:
+    virtual void foo() = 0;  // 純虛擬函式
+};
+
+class Derived : public Base {
+    // ❌ 沒有覆寫 foo()，所以仍然是抽象類別
+};
+
+class MoreDerived : public Derived {
+public:
+    void foo() override {  // ✅ MoreDerived 有覆寫 foo()
+        std::cout << "MoreDerived foo()" << std::endl;
+    }
+};
+
+如果你想建立該類的物件，子類就「一定要」覆寫純虛擬函式。
+如果子類仍然是抽象類別，就不一定要覆寫純虛擬函式。
+C++11 之後允許純虛擬函式 = 0 但仍提供函式體，可作為預設行為。
+*/
+#pragma endregion
+
+
