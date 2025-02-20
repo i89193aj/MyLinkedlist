@@ -8,25 +8,33 @@
 #define DLL_API __declspec(dllimport)  // 導入符號
 #endif
 
-#include <iostream>
 #include <string>
+#include <iostream>
+#include <vector>       // 若成員變數用到 std::vector
+#include <map>          // 若有 std::map 變數
+#include <unordered_map>// 若有 std::unordered_map 變數
 
-// 节点类定义
+
+
+// 節點類定義
 template<typename T>
 class DLL_API Node {
 public:
     T val;
     Node<T>* next;
+    Node<T>* random;
 
-    Node(T val) : val(val), next(nullptr) {};
-    Node(T val, Node<T>* next) :val(val), next(next) {};
+    Node(T val) : val(val), next(nullptr), random(nullptr) {}
+    Node(T val, Node<T>* next) : val(val), next(next), random(nullptr) {}
+    Node(T val, Node<T>* next, Node<T>* random) : val(val), next(next), random(random) {}
+
 };
 
 // MyLinkedlist 類定義
 template <typename T>
 class DLL_API MyLinkedlist {
 private:
-    Node<T>* Header;
+    //Node<T>* Header;
 
     enum MyType {
         arithmetic,
@@ -35,6 +43,7 @@ private:
     };
 
 public:
+    Node<T>* Header;
     MyLinkedlist();
     MyLinkedlist(const MyLinkedlist& _MyLinkedlist);
     void Append(T _val);
@@ -52,12 +61,18 @@ public:
 
     // ======= Leetcode Solutions =======
     Node<T>* Leetcode_Sol_21(Node<T>* list1, Node<T>* list2, int _Soluttion_idx);
-    Node<T>* Leetcode_Sol_19(Node<T>* head, int n, int _Soluttion_idx);
+    Node<T>* Leetcode_Sol_19(Node<T>* head, int n, int _solution);
     bool Leetcode_Sol_141(Node<T>* head);
     Node<T>* Leetcode_Sol_876(Node<T>* head, int _solution);
     Node<T>* Leetcode_Sol_160(Node<T>* headA, Node<T>* headB, int _solution);
+    Node<T>* Leetcode_Sol_142(Node<T>* head, int _solution);
+    Node<T>* Leetcode_Sol_138(Node<T>* head, int _solution);
     // ======= Leetcode Solutions =======
 };
+
+template <typename T>
+void PrintLinkedlist(Node<T>* _node);
+template <typename T> void CopyWithVector(Node<T>* _node,const std::vector <T>& _vector);
 
 // 顯示實例化模板，以便在 DLL 中生成特定類型
 extern template class DLL_API MyLinkedlist<int>;

@@ -9,24 +9,75 @@
 #include"Linkedlist.h"
 #include <map>      //std::map
 #include <unordered_map>  //std::unordered_map
-
-
 using namespace std;
 
 // 顯式實例化模板以便在 DLL 中包含特定類型
 template class DLL_API MyLinkedlist<int>;
 template class DLL_API MyLinkedlist<std::string>;
 
+enum LeetcodeExam {
+    Leetcode138_CopyListwithRandomPointer,
+
+
+
+    None,
+};
+
 #ifndef NOBUILDING_DLL  //#ifdef BUILDING_DLL
 int main()
 {
-    MyLinkedlist<int>* list1 = new MyLinkedlist<int>();//堆區 (heap)，list1 存的是該物件的記憶體位址
+    #pragma region Leetcode program Test
+    /*
+       要寫的題目只要改：
+       1.ExamEnum(題號).2.LinkedlistInput1、LinkedlistInput2(輸入)
+    */
+    LeetcodeExam ExamEnum = Leetcode138_CopyListwithRandomPointer;//ChangeForExam
+    MyLinkedlist<int>* list1 = new MyLinkedlist<int>();
     MyLinkedlist<int>* list2 = new MyLinkedlist<int>();
-    Node<int>* header = new Node<int>(1);
-    Node<int>* follow = new Node<int>(2);
+    vector<int> LinkedlistInput1 = { 7,13,11,10,1 }; //ChangeForExam
+    vector<int> LinkedlistInput2 = { 7,13,11,10,1 }; //ChangeForExam
 
-    header->next = follow;
-    list1->Leetcode_Sol_19(header,2,1);
+    Node<int>* Dummy = new Node<int>(-1); Node<int>* prev = Dummy;
+    Node<int>* headerInput1 = new Node<int>(LinkedlistInput1[0]); Node<int>* current1 = headerInput1;// current1 = list1->Header;(也可以用寫好的物件)
+    Node<int>* headerInput2 = new Node<int>(LinkedlistInput1[0]); Node<int>* current2 = headerInput1;
+    Node<int>* pointer = headerInput1; Node<int>* ans;
+    CopyWithVector(headerInput1, LinkedlistInput1);
+    CopyWithVector(headerInput2, LinkedlistInput2);
+
+    switch (ExamEnum)
+    {
+    #pragma region Leetcode 138. Copy List with Random Pointer
+    case Leetcode138_CopyListwithRandomPointer: {
+        int* shift_138 = new int[] {5, 0, 4, 2, 0};//0 7 1 11 7 補充：C++的case不能在裡面宣告：解法1.外面加"{}" 解法2.把宣告定義弄在外面
+        for (auto num : LinkedlistInput1) {
+            int j = *shift_138;
+            while (j > 0) {
+                pointer = pointer->next;
+                j--;
+            }
+            current1->random = pointer;
+            current1 = current1->next;
+            pointer = headerInput1;
+            shift_138++;
+        }
+        current1 = headerInput1;
+        PrintLinkedlist(current1);
+        ans = list1->Leetcode_Sol_138(headerInput1, 1); //copyRandomList(node1);
+        PrintLinkedlist(current1);
+        PrintLinkedlist(ans);
+
+        break; 
+    }
+    #pragma endregion
+
+        
+        default:
+            break;
+    }  
+    #pragma endregion
+
+
+
     #pragma region random_device
     //srand(time(nullptr)); // 用目前時間作為隨機種子
     int randomNumber = rand() % 100 + 1; // 產生 1~100 之間的數字
@@ -150,6 +201,29 @@ int main()
 
 }
 #endif
+template <typename T>/*請在.h檔也加入*/
+void PrintLinkedlist(Node<T>* _node) {
+    while (_node) {
+        cout << "Value: " << _node->val << ", Address:" << _node;
+        if (_node->random)
+            cout << ", Random: " << _node->random->val << ", Address:" << _node->random;
+        else
+            cout << ", Random: NULL";
+        cout << endl;
+        _node = _node->next;
+    }
+    cout << endl;
+}
+template <typename T>/*請在.h檔也加入*/
+void CopyWithVector(Node<T>* _node,const vector<T>& _vector) {
+    for (size_t i = 1; i < _vector.size(); i++) {
+        Node<int>* newnode = new Node<int>(_vector[i]);
+        _node->next = newnode;
+        _node = _node->next;
+    }
+}
+
+
 
 /// <summary>
 /// Contructor
@@ -610,8 +684,8 @@ Node<T>* mergeTwoLists3(Node<T>* list1, Node<T>* list2) {
 #pragma region Leetcode 19. Remove Nth Node From End of List
 //Leetcode 19. Remove Nth Node From End of List
 template<typename T>
-Node<T>* MyLinkedlist<T>::Leetcode_Sol_19(Node<T>* head, int n,int _Soluttion_idx) {
-    switch (_Soluttion_idx)
+Node<T>* MyLinkedlist<T>::Leetcode_Sol_19(Node<T>* head, int n,int _solution) {
+    switch (_solution)
     {
     case 1:
         return FindLenToSol_19(head, n);
@@ -790,7 +864,9 @@ Node<T>* MyLinkedlist<T>::Leetcode_Sol_160(Node<T>* headA, Node<T>* headB, int _
     case 1:
         return Unordered_map_160(headA, headB);
     case 2:
-        return TwoPointer_160(headA, headB);
+        return TwoPointer1_160(headA, headB);
+    case 3:
+        return TwoPointer2_160(headA, headB);
     default:
         return nullptr; // 確保所有路徑都有回傳值
     }
@@ -798,11 +874,11 @@ Node<T>* MyLinkedlist<T>::Leetcode_Sol_160(Node<T>* headA, Node<T>* headB, int _
     return nullptr;
 }
 
-//LUnordered_map
+//Unordered_map
 template<typename T>
 Node<T>* Unordered_map_160(Node<T>* headA, Node<T>* headB) {
     // 創建 unordered_map，將指針作為鍵，值為整數
-    unordered_map<ListNode*, int> map;
+    unordered_map<Node<T>*, T> map;
     Node<T>* pointer = headA;
     while (pointer) {
         map[pointer] = pointer->val;
@@ -819,26 +895,191 @@ Node<T>* Unordered_map_160(Node<T>* headA, Node<T>* headB) {
     return nullptr;
 }
 
-//TwoPointer
+//TwoPointer1
 template<typename T>
-Node<T>* TwoPointer_160(Node<T>* headA, Node<T>* headB) {
-    // 創建 unordered_map，將指針作為鍵，值為整數
-    unordered_map<ListNode*, int> map;
-    Node<T>* pointer = headA;
-    while (pointer) {
-        map[pointer] = pointer->val;
-        pointer = pointer->next;
+Node<T>* TwoPointer1_160(Node<T>* headA, Node<T>* headB) {
+    Node<T>* p1 = headA;
+    Node<T>* p2 = headB;
+    int iCountA = 0; int iCountB = 0; int iLength = 0;
+    while (p1) {
+        p1 = p1->next;
+        iCountA++;
     }
-    pointer = headB;
-    while (pointer) {
-        if (pointer->val == map[pointer])
-            return pointer;
+    while (p2) {
+        p2 = p2->next;
+        iCountB++;
+    }
+    p2 = headB; p1 = headA;
+    if (iCountA > iCountB)
+    {
+        iLength = iCountA - iCountB;
+        for (int i = 0; i < iLength; i++)
+            p1 = p1->next;
+    }
+    else
+    {
+        iLength = iCountB - iCountA;
+        for (int i = 0; i < iLength; i++)
+            p2 = p2->next;
+    }
 
-        pointer = pointer->next;
+    while (p1) {
+        if (p1 == p2) return p1;
+        p1 = p1->next;
+        p2 = p2->next;
     }
 
     return nullptr;
 }
+
+/*
+[A1 Common A1' B1 Common]
+[B1 Common B1' A1 Common]
+Because[A1'=B1']，So it can meet at the second time common.
+That's why We can do the both line at the same step.
+*/
+//TwoPointer2
+template<typename T>
+Node<T>* TwoPointer2_160(Node<T>* headA, Node<T>* headB) {
+    Node<T>* p1 = headA;
+    Node<T>* p2 = headB;
+
+      while(p1!=p2){
+          p1 = p1? p1->next:headB;
+          p2 = p2? p2->next:headA;
+      }
+      return p1;
+}
+#pragma endregion
+
+#pragma region Leetcode 142. Linked List Cycle II
+//Leetcode 142. Linked List Cycle II
+template<typename T>
+Node<T>* MyLinkedlist<T>::Leetcode_Sol_142(Node<T>* head, int _solution) {
+    switch (_solution)
+    {
+    case 1:
+        return OnePointer_142(head);
+    case 2:
+        return Floyd_Cycle_Detection_142(head);
+    default:
+        return nullptr; // 確保所有路徑都有回傳值
+    }
+
+    return nullptr;
+}
+
+template <typename T>
+Node<T>* OnePointer_142(Node<T>* head) {
+    Node<T>* current = head; int iTotalNode = 0;
+    Node<T>* slow = head;
+    unordered_map<Node<T>*, T> map;
+
+
+    while (slow) {
+        map[slow] = slow->val;
+        slow = slow->next;
+        if (map.find(slow) != map.end())
+            return slow;
+    }
+
+    return nullptr;
+}
+
+
+/*
+Floyd’s Cycle Detection Algorithm
+進入圈圈的起始點：k 所求
+圈數：C
+第一次遇到的位置：n已知
+步伐：1步、2步
+1(k + (n-k))、2(k + (n-k))
+2(k + (n-k)) - 1(k + (n-k)) = mC
+2n - n = mC
+條件：
+1.n = mC(代表n是圈圈的倍數)
+2.又因n-k是兩個的公同位置
+所以：
+一個人從起始位置走k
+另一個人從剛剛第一次相遇的位置開始走k則會相遇
+(有人會問說那n如果是很大，n = 4C(4圈)，
+但k已經限定是進入圈圈的起始點，代表n-k會把剩下的圈數補齊)
+*/
+//Floyd’s Cycle Detection Algorithm
+template <typename T>
+Node<T>* Floyd_Cycle_Detection_142(Node<T>* head) {
+    Node<T>* slow = head;
+    Node<T>* fast = head;
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+        if (slow == fast) {
+            slow = head;
+            while (slow != fast) {
+                slow = slow->next;
+                fast = fast->next;
+            }
+            return slow;
+        }
+    }
+    return nullptr;
+}
+#pragma endregion
+
+#pragma region Leetcode 138. Copy List with Random Pointer
+//Leetcode 138. Copy List with Random Pointer
+template<typename T>
+Node<T>* MyLinkedlist<T>::Leetcode_Sol_138(Node<T>* head, int _solution) {
+    switch (_solution)
+    {
+    case 1:
+        return DeepCopy_138(head);
+    case 2:
+        return Floyd_Cycle_Detection_142(head);
+    default:
+        return nullptr; // 確保所有路徑都有回傳值
+    }
+
+    return nullptr;
+}
+
+template <typename T>
+Node<T>* DeepCopy_138(Node<T>* head) {
+    //創暫存點指向要複製的那個點(複製其所有的屬性，除了random)，最後會變成一條鏈
+    //unordered_map紀錄點(Src)的random的<currentRdm->next,index> = <位置pointer,index(哪個pointer指向我)>
+    //這樣就知道是第幾個位置指向我現在的pointer
+    //如果index小於or等於當前pointer的位置，那就可以直接做，如果index大於我現在的pointer先不做(這樣可以省下每次當下指向自己又位置小於的自己而需要額外行走到自己的距離，下一次返回來走同理)
+    //最後會有一個兩個移動暫存指標再移回來一次就完成了!
+    if (!head) return head;
+    Node<T>* currentSrc = head; unordered_map<Node<T>*, Node<T>*> map;
+    Node<T>* Dst = new Node<T>(head->val); Node<T>* currentDst = Dst;
+
+    while (currentSrc) {
+        if (currentSrc->next) {
+            Node<T>* DstNext = new Node(currentSrc->next->val);
+            currentDst->next = DstNext;
+        }
+        map[currentSrc] = currentDst;
+
+        currentDst = currentDst->next;
+        currentSrc = currentSrc->next;
+    }
+    currentDst = Dst; currentSrc = head; int iLocation = 0;
+    //map這個節點匹配他的random
+    // 第二遍：設置隨機指標
+    currentSrc = head;
+    currentDst = Dst;
+    while (currentSrc) {
+        if (currentSrc->random) {
+            currentDst->random = map[currentSrc->random];
+        }
+        currentSrc = currentSrc->next;
+        currentDst = currentDst->next;
+    }
+    
+    return Dst;
+}
+
 #pragma endregion
 
 
