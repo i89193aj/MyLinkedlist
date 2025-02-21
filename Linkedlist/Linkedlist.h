@@ -67,6 +67,15 @@ public:
     Node<T>* Leetcode_Sol_160(Node<T>* headA, Node<T>* headB, int _solution);
     Node<T>* Leetcode_Sol_142(Node<T>* head, int _solution);
     Node<T>* Leetcode_Sol_138(Node<T>* head, int _solution);
+    Node<T>* Leetcode_Sol_61(Node<T>* head,int k, int _solution);
+    Node<T>* Leetcode_Sol_2(Node<T>* list1, Node<T>* list2, int _Soluttion_idx);
+    bool Leetcode_Sol_234(Node<T>* head, int _solution);
+    Node<T>* Leetcode_Sol_203(Node<T>* head, T val, int _solution);
+    Node<T>* Leetcode_Sol_83(Node<T>* head, int _solution);
+    void Leetcode_Sol_237(Node<T>* node, int _solution);
+
+
+
     // ======= Leetcode Solutions =======
 };
 

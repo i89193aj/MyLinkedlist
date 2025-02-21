@@ -489,7 +489,9 @@ void* MyLinkedlist<T>::GetNextNode() {
     if (!Header) return nullptr;
         return Header->next;
 }
- 
+
+#pragma region Leetcode
+
 #pragma region Leetcode 206. Reverse Linked List
 //Leetcode 206. Reverse Linked List
 template<typename T>
@@ -518,7 +520,6 @@ Node<T>* Leetcode_Sol_206(Node<T>* head) {
 #pragma endregion
 }
 #pragma endregion
-
 
 #pragma region Leetcode 92. Reverse Linked List II
 //Leetcode 92. Reverse Linked List II
@@ -570,7 +571,6 @@ Node<T>* Leetcode_Sol_92(Node<T>* Head, int _left, int _Right) {
     return Head;
 }
 #pragma endregion
-
 
 #pragma region Leetcode 21. Merge Two Sorted Lists
 //Leetcode 21. Merge Two Sorted Lists
@@ -1033,9 +1033,9 @@ Node<T>* MyLinkedlist<T>::Leetcode_Sol_138(Node<T>* head, int _solution) {
     switch (_solution)
     {
     case 1:
-        return DeepCopy_138(head);
+        return Unordered_map_138(head);
     case 2:
-        return Floyd_Cycle_Detection_142(head);
+        return TwoPointerWithLinkedlistFeature_138(head);
     default:
         return nullptr; // 確保所有路徑都有回傳值
     }
@@ -1044,7 +1044,7 @@ Node<T>* MyLinkedlist<T>::Leetcode_Sol_138(Node<T>* head, int _solution) {
 }
 
 template <typename T>
-Node<T>* DeepCopy_138(Node<T>* head) {
+Node<T>* Unordered_map_138(Node<T>* head) {
     //創暫存點指向要複製的那個點(複製其所有的屬性，除了random)，最後會變成一條鏈
     //unordered_map紀錄點(Src)的random的<currentRdm->next,index> = <位置pointer,index(哪個pointer指向我)>
     //這樣就知道是第幾個位置指向我現在的pointer
@@ -1080,7 +1080,403 @@ Node<T>* DeepCopy_138(Node<T>* head) {
     return Dst;
 }
 
+template <typename T>
+Node<T>* TwoPointerWithLinkedlistFeature_138(Node<T>* head) {
+    if (!head) return head;
+    Node<T>* cur = head;
+    //Step1. Put the newnode in the origin list by staggered placement.
+    while (cur) {
+        Node<T>* newnode = new Node<T>(cur->val);
+        newnode->next = cur->next;
+        cur->next = newnode;
+        cur = newnode->next;
+    }
+    //Step2. Set up the random for each newnode.
+    cur = head;
+    while (cur) {
+        //it's because the newnode and old lists are arranged staggered!  
+        if (cur->random)
+            cur->next->random = cur->random->next;
+        cur = cur->next->next;
+    }
+    //Step3. Split the list into two old and new Lists.
+    cur = head;
+    Node<T>* newlisthead = cur->next;
+    Node<T>* copypointer = newlisthead;
+    while (cur) {
+        cur->next = copypointer->next;
+        copypointer->next = copypointer->next ? copypointer->next->next : nullptr;
+        cur = cur->next;
+        copypointer = copypointer->next;
+    }
+
+    return newlisthead;
+}
+
 #pragma endregion
+
+#pragma region Leetcode 61. Rotate List
+//Leetcode 61. Rotate List
+template<typename T>
+Node<T>* MyLinkedlist<T>::Leetcode_Sol_61(Node<T>* head,int k, int _solution) {
+    switch (_solution)
+    {
+    case 1:
+        return TwoPointerFindRemainderthOfEnd_138(head,k);
+    case 2:
+        return AlgebraicFindRemainderthOfEnd_138(head,k);
+    default:
+        return nullptr; // 確保所有路徑都有回傳值
+    }
+
+    return nullptr;
+}
+
+/*考題重點：找到倒數第k個 => fast slow pointer*/
+template <typename T>
+Node<T>* TwoPointerFindRemainderthOfEnd_138(Node<T>* head, int k) {
+    if (!head) return head;
+    Node<T>* fast = head; Node<T>* slow = head; int itotal = 0;
+    //分析：因為 k > sizeoflist => 代表：k要先取餘數才是倒數第k個截掉補到前面
+    while (fast) {
+        fast = fast->next;
+        itotal++;
+    }
+    fast = head;
+    int remainder = k % itotal;
+    if (!remainder) return head;
+   //remainder就會是我們會希望知道的倒數第remainder值，Skill：我們會希望知道：倒數remainder+1值(因為要利用node可以處理自己跟他的下一個node的特性)
+    for (int i = 0; i < remainder + 1; i++) {
+        fast = fast->next;
+    }
+    //這個做完後，slow 會在倒數k+1個位置
+    while (fast) {
+        fast = fast->next;
+        slow = slow->next;
+    }
+    //把第k個位置截掉
+    fast = slow->next;
+    slow->next = nullptr;
+    T val{};
+    Node<T>* Dummy = new Node<T>(val, fast);
+    while (fast->next) {
+        fast = fast->next;
+    }
+    fast->next = head;
+    return Dummy->next;
+}
+
+/*考題重點：找到倒數第k個 => Algebraic Algorithm*/
+template <typename T>
+Node<T>* AlgebraicFindRemainderthOfEnd_138(Node<T>* head, int k) {
+    if (!head) return head;
+    Node<T>* cur = head; int size = 0;
+    while (cur) {
+        cur = cur->next;
+        size++;
+    }
+    int remainder = k % size;
+    int shift = size - remainder;
+    T val{};
+    Node<T>* Dummy = new Node<T>(val, head);
+    cur = Dummy;
+    if (shift != size)
+    {
+        while (shift > 0) {
+            cur = cur->next;
+            shift--;
+        }
+        Node<T>* MovetoForward = cur->next;
+        Node<T>* move = MovetoForward;
+        cur->next = nullptr;
+
+        while (move->next) {
+            move = move->next;
+        }
+        move->next = Dummy->next;
+
+        return MovetoForward;
+    }
+
+    return head;
+}
+
+
+#pragma endregion
+
+#pragma region Leetcode 2. Add Two Numbers
+//Leetcode 2. Add Two Numbers
+template<typename T>
+Node<T>* MyLinkedlist<T>::Leetcode_Sol_2(Node<T>* list1, Node<T>* list2, int _solution) {
+    switch (_solution)
+    {
+    case 1:
+        return AlgebraicCarry_138(list1, list2);
+    case 2:
+        return Recursion_138(list1, list2);
+    default:
+        return nullptr; // 確保所有路徑都有回傳值
+    }
+
+    return nullptr;
+}
+
+/*考題重點：進位 => Recursion*/
+template <typename T>
+Node<T>* Recursion_138(Node<T>* l1, Node<T>* l2,int carry = 0) {
+    /*
+       1.判斷有沒有進位
+       2.如果遇到nullptr & 進位 ->要多開一個給他
+    */
+    if constexpr (std::is_same<T, int>::value) {
+       //Base case ： Condition 1.l1 = nullptr && l2 = nullptr &&  Condition 2. carry == 0
+        if (!l1 && !l2 && !carry)
+            return nullptr;
+
+        //Condition 2.
+        int sum = carry;
+        //Condition 1.
+        if (l1)
+        {
+            sum += l1->val;
+            l1 = l1->next;
+        }
+        if (l2) 
+        {
+            sum += l2->val;
+            l2 = l2->next;
+        }
+
+        //Create the new list of node
+        Node<T>* newnode = new Node<T>(sum % 10);
+        //Recursively call for the next node with the carry over
+        newnode->next = Recursion_138(l1,l2,sum/10);
+
+        return newnode;
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
+/*進位：Math*/
+template <typename T>
+Node<T>* AlgebraicCarry_138(Node<T>* l1, Node<T>* l2) {
+    //這裡使用了 C++17 的 if constexpr 來在模板方法中進行類型檢查，確保 T 是 int 時才創建 Node<int>。
+    if constexpr (std::is_same<T, int>::value) {
+        /*
+           1.判斷有沒有進位
+           2.如果遇到nullptr & 進位 ->要多開一個給他
+        */
+        Node<T>* Dummy = new Node<T>(0); Node<T>* copy = Dummy;
+        Node<T>* cur1 = l1; Node<T>* cur2 = l2; int iAddup; int icarry = 0;
+        while (cur1 && cur2) {
+            iAddup = icarry == 0 ? cur1->val + cur2->val : cur1->val + cur2->val + 1;
+            Node<T>* newnode = new Node<T>(iAddup % 10);
+            copy->next = newnode;
+            copy = copy->next;
+            cur1 = cur1->next; cur2 = cur2->next;
+            icarry = iAddup / 10 ? 1 : 0;
+        }
+
+        while (cur1) {
+            iAddup = icarry == 0 ? cur1->val : cur1->val + 1;
+            Node<T>* newnode = new Node<T>(iAddup % 10);
+            copy->next = newnode;
+            copy = copy->next;
+            cur1 = cur1->next;
+            icarry = iAddup / 10 ? 1 : 0;
+        }
+
+        while (cur2) {
+            iAddup = icarry == 0 ? cur2->val : cur2->val + 1;
+            Node<T>* newnode = new Node<T>(iAddup % 10);
+            copy->next = newnode;
+            copy = copy->next;
+            cur2 = cur2->next;
+            icarry = iAddup / 10 ? 1 : 0;
+        }
+
+        if (icarry)
+        {
+            Node<T>* lastnode = new Node<T>(1);
+            copy->next = lastnode;
+        }
+
+
+        return Dummy->next;
+    }
+    else
+        return nullptr;
+}
+#pragma endregion
+
+#pragma region Leetcode 234. Palindrome Linked List
+//Leetcode 234. Palindrome Linked List
+template<typename T>
+bool MyLinkedlist<T>::Leetcode_Sol_234(Node<T>* head, int _solution) {
+    switch (_solution)
+    {
+    case 1:
+        return TwoPointerReverse_234(head);
+    default:
+        return false; // 確保所有路徑都有回傳值
+    }
+
+    return false;
+}
+
+/*考題重點：要反轉->找中位值 => TwoPointer*/
+template <typename T>
+bool TwoPointerReverse_234(Node<T>* head) {
+    if (!head) return head;
+    Node<T>* fast = head; Node<T>* slow = head; Node<T>* prev = nullptr;
+    while (fast && fast->next) {
+        fast = fast->next->next;
+
+        //Reverse
+        head = slow->next;
+        slow->next = prev;
+        prev = slow;
+        slow = head;
+    }
+
+    slow = fast ? slow->next : slow;
+    while (slow) {
+        if (slow->val != prev->val) return false;
+        slow = slow->next;
+        prev = prev->next;
+    }
+
+    return true;
+}
+#pragma endregion
+
+#pragma region Leetcode 203. Remove Linked List Elements
+//Leetcode 203. Remove Linked List Elements
+template<typename T>
+Node<T>* MyLinkedlist<T>::Leetcode_Sol_203(Node<T>* head, T val, int _solution) {
+    switch (_solution)
+    {
+    case 1:
+        return DummyMove_203(head, val);
+    case 2:
+        return SinglePointMove_203(head, val);
+    default:
+        return nullptr; // 確保所有路徑都有回傳值
+    }
+
+    return nullptr;
+}
+/*考題：邊界值處理：Use Dummy & point Dummy pointer*/
+template <typename T>
+Node<T>* DummyMove_203(Node<T>* head, T val) {
+    if (!head) return head;
+    T dummyval{};
+    Node<T>* Dummy = new Node<T>(dummyval,head);
+    Node<T>* cur = Dummy; Node<T>* follow = head;
+    while (follow) {
+        if (follow->val == val) {
+        }
+        else{
+            cur->next = follow;
+            cur = follow;
+        }
+        follow = follow->next;
+    }
+    cur -> next = follow;//這個容易忘記!!
+    return Dummy->next;
+}
+
+/*考題：邊界值處理：Without Dummy(單指標處理)，考試用上面那個比較直觀*/
+template <typename T>
+Node<T>* SinglePointMove_203(Node<T>* head, T val) {
+    //先處理邊界問題
+    while (head) {
+        if (head->val == val) {
+            head = head->next;
+        }
+        else break;
+        //注意：要用這種方式，一定要關差前面有沒有少他一次的判別
+        //之前打的錯誤：if (head->val == val) bead = head->next;
+        //第二次錯誤：head->next = head->next->next;
+    }                               
+                                          
+    Node<T>* cur = head;
+    while (cur && cur -> next) {
+        if (cur->next->val == val) {
+            cur->next = cur->next->next;
+        }
+        else {
+            cur = cur->next;
+        }
+    }
+    return head;
+}
+#pragma endregion
+
+#pragma region Leetcode 83. Remove Duplicates from Sorted List
+//Leetcode 83. Remove Duplicates from Sorted List
+template<typename T>
+Node<T>* MyLinkedlist<T>::Leetcode_Sol_83(Node<T>* head, int _solution) {
+    switch (_solution)
+    {
+    case 1:
+        return DummyMove_83(head);
+    default:
+        return nullptr; // 確保所有路徑都有回傳值
+    }
+
+        return nullptr;
+}
+
+/*考題：邊界值處理：Use Dummy*/
+template <typename T>
+Node<T>* DummyMove_83(Node<T>* head) {
+    if (!head) return head;
+    T val{};
+    Node<T>* dummy = new Node<T>(val, head);
+    Node<T>* Suc = head; //"Suc" 是 "Successor"繼承者
+    while (Suc && Suc->next) {
+        if (Suc->val == Suc->next->val)
+            Suc->next = Suc->next->next;
+        else
+            Suc = Suc->next;
+    }
+
+    return dummy->next;
+}
+#pragma endregion
+
+#pragma region Leetcode 237. Delete Node in a Linked List
+//Leetcode 237. Delete Node in a Linked List
+template<typename T>
+void MyLinkedlist<T>::Leetcode_Sol_237(Node<T>* node, int _solution) {
+    switch (_solution)
+    {
+    case 1:
+        return NodeFeature_237(node);
+    default:
+        return ; // 確保所有路徑都有回傳值
+    }
+
+    return ;
+}
+
+/*特殊考題：考Linkedlist 特性(操作當前節點與下一個節點)*/
+template <typename T>
+void NodeFeature_237(Node<T>* node) {
+    node->val = node->next->val;
+    node->next = node->next->next;
+}
+#pragma endregion
+
+#pragma endregion
+
+
+
+
 
 
 
